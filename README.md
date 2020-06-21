@@ -1,5 +1,5 @@
 # Cozmo-linefollow
-Cozmo-SDK+ROS
+ROS
 
 copy file linefollow.py to ROS package /cozmo_driver/nodes/
 
