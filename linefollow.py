@@ -13,13 +13,15 @@ class Follower:
         self.image_sub = rospy.Subscriber('/cozmo_camera/image', Image, self.image_callback)
         self.cmd_vel_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=1)
         self.lift_height_pub = rospy.Publisher('/lift_height', Float64, queue_size=1)
+        self.head_angle_pub = rospy.Publisher('/head_angle', Float64, queue_size=1)
 
         self.twist = Twist()
-        self.lift_height = Float64(data=20)
+        self.lift_height = Float64(data=1)
+        self.head_angle = Float64(data=-20)
         self.err = 0
         self.cnt = 0
 
-        self.lift_height_pub.publish(20)
+        # self.lift_height_pub.publish(20)
 
 
     def image_callback(self, msg):
@@ -28,6 +30,9 @@ class Follower:
 
         cv2.imshow('window_img',img)
         cv2.waitKey(3)
+
+        self.lift_height_pub.publish(self.lift_height)
+        self.head_angle_pub.publish(self.head_angle)
 
         # ROI
         # cropped = img[y0:y1, x0:x1]
@@ -48,7 +53,7 @@ class Follower:
 
         # Judge center of line
         x0 = 160
-        if x.shape[0] <> 0:
+        if x.shape[0] != 0:
             y0 = (max(y) + min(y))/2
             x0 = (max(x) + min(x))/2
             # print '(x0,y0):', x0, y0
@@ -56,7 +61,7 @@ class Follower:
         # print 'x.shape[0]:',  x.shape[0]
         if x.shape[0] < 100:
             self.cnt  += 1
-            if self.cnt > 30:
+            if self.cnt > 20:
                 self.twist.linear.x = 0.0
                 self.twist.angular.z = 0.0
                 print 'Stop!'
@@ -65,7 +70,7 @@ class Follower:
             # control
             err = x0 - 160
             print 'err:', err
-            self.twist.linear.x = 0.01
+            self.twist.linear.x = 0.02
             self.twist.angular.z = 0.0
             if abs(err) > 5:
                 self.twist.angular.z = 0.74 * -err * 0.006
@@ -74,7 +79,7 @@ class Follower:
             else:
                 print 'Go ahead!'
         self.cmd_vel_pub.publish(self.twist)
-        self.lift_height_pub.publish(20)
+        # self.lift_height_pub.publish(20)
 
 
 if __name__ == '__main__':
